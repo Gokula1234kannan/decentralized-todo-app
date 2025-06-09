@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
-import { getContract } from "./utils/contract";
+import { getContract } from "./utils/Contract";
 import TaskItem from "./components/TaskItem";
 import "./App.css";
 
