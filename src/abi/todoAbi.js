@@ -1,4 +1,4 @@
-// src/abi/todoAbi.js
+
 export const abi = [
   {
     inputs: [

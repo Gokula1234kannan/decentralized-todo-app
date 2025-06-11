@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { ethers } from "ethers";
+import { BrowserProvider, formatEther } from "ethers";
+
 import { getContract } from "./utils/Contract";
 import TaskItem from "./components/TaskItem";
 import "./App.css";
@@ -8,13 +9,27 @@ const App = () => {
   const [walletAddress, setWalletAddress] = useState("");
   const [taskInput, setTaskInput] = useState("");
   const [tasks, setTasks] = useState([]);
+  const [balance, setBalance] = useState("");
 
   const connectWallet = async () => {
     if (!window.ethereum) return alert("Install MetaMask");
     const accounts = await window.ethereum.request({
       method: "eth_requestAccounts",
     });
-    setWalletAddress(accounts[0]);
+    const account = accounts[0];
+    setWalletAddress(account);
+    getBalance(account);
+  };
+
+  const getBalance = async (address) => {
+    try {
+      const provider = new BrowserProvider(window.ethereum);
+      const balanceBigNumber = await provider.getBalance(address); 
+      const balanceInEth = formatEther(balanceBigNumber);
+      setBalance(parseFloat(balanceInEth).toFixed(4));
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+    }
   };
 
   const loadTasks = async () => {
@@ -29,21 +44,24 @@ const App = () => {
     const tx = await contract.addTask(taskInput);
     await tx.wait();
     setTaskInput("");
-    loadTasks();
+    await loadTasks();
+    await getBalance(walletAddress);
   };
 
   const toggleTask = async (index) => {
     const contract = await getContract();
     const tx = await contract.toggleTask(index);
     await tx.wait();
-    loadTasks();
+    await loadTasks();
+    await getBalance(walletAddress);
   };
 
   const deleteTask = async (index) => {
     const contract = await getContract();
     const tx = await contract.deleteTask(index);
     await tx.wait();
-    loadTasks();
+    await loadTasks();
+    await getBalance(walletAddress);
   };
 
   useEffect(() => {
@@ -62,6 +80,11 @@ const App = () => {
             <p className="text-center mb-4 text-sm sm:text-base text-black/80 ">
               Connected Wallet:
               <span className="font-mono p-1">{walletAddress}</span>
+            </p>
+
+            <p className="text-center mb-4 text-sm sm:text-base text-black/80 ">
+              Balance:
+              <span className="font-mono p-1">{balance} ETH</span>
             </p>
 
             <div className="flex items-center gap-4 mb-6">
